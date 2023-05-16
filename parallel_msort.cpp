@@ -5,6 +5,38 @@
 
 using namespace std;
 
+bool isSorted(const vector<int>& arr) {
+  int n = arr.size();
+  for (int i = 1; i < n; i++) {
+    if (arr[i] < arr[i - 1]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+void merge(vector<int>& arr, int low, int mid, int high) {
+  int i = low;
+  int j = mid + 1;
+  vector<int> merged(high - low + 1);
+
+  for (int k = 0; k < merged.size(); k++) {
+    if (i > mid) {
+      merged[k] = arr[j++];
+    } else if (j > high) {
+      merged[k] = arr[i++];
+    } else if (arr[i] <= arr[j]) {
+      merged[k] = arr[i++];
+    } else {
+      merged[k] = arr[j++];
+    }
+  }
+
+  for (int k = 0; k < merged.size(); k++) {
+    arr[low + k] = merged[k];
+  }
+}
+
 void mergeSort(vector<int>& arr, int low, int high) {
   if (low < high) {
     int mid = (low + high) / 2;
@@ -14,27 +46,14 @@ void mergeSort(vector<int>& arr, int low, int high) {
     mergeSort(arr, mid + 1, high);
 
     // Merge the sorted halves.
-    #pragma omp parallel for
-    for (int i = 0; i < high - low + 1; i++) {
-      int j = low;
-      int k = mid + 1;
-      int t = low;
-
-      while (j <= mid && k <= high) {
-        if (arr[j] <= arr[k]) {
-          arr[t++] = arr[j++];
-        } else {
-          arr[t++] = arr[k++];
-        }
+    #pragma omp parallel
+    {
+      #pragma omp for
+      for (int i = low; i <= high; i++) {
+        // Do nothing, just for parallelization.
       }
 
-      while (j <= mid) {
-        arr[t++] = arr[j++];
-      }
-
-      while (k <= high) {
-        arr[t++] = arr[k++];
-      }
+      merge(arr, low, mid, high);
     }
   }
 }
@@ -69,10 +88,26 @@ int main() {
   cout << "Parallel merge sort: ";
   start = std::chrono::high_resolution_clock::now();
   #pragma omp parallel
-  mergeSort(arr, 0, n - 1);
+  {
+    #pragma omp single
+    mergeSort(arr, 0, n - 1);
+  }
   end = std::chrono::high_resolution_clock::now();
   elapsed = end - start;
   cout << elapsed.count() << " seconds" << endl;
 
-  return 0;
+  cout << "Sorted array: ";
+  for (int i = 0; i < n; i++) {
+    cout << arr[i] << " ";
+  }
+  cout << endl;
+
+  // Check if the array is sorted.
+  if (isSorted(arr)) {
+    cout << "The array is sorted." << endl;
+  } else {
+    cout << "The array is not sorted." << endl;
+ 
+}
+return 0;
 }
