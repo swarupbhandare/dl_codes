@@ -45,6 +45,12 @@ int main() {
   auto end = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double> elapsed = end - start;
   cout << elapsed.count() << " seconds" << endl;
+  
+  cout << "Sorted array: ";
+  for (int i = 0; i < n; i++) {
+    cout << arr[i] << " ";
+  }
+  cout << endl;
 
   // Parallel bubble sort.
   cout << "Parallel bubble sort: ";
